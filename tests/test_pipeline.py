@@ -247,3 +247,22 @@ def test_boundary_evaluation():
     res_misses = evaluator.evaluate_segmentation(ref, pred_misses)
     assert res_misses.hits == 0
     assert res_misses.r_value < 1.0
+
+
+# 17. silence handling in recognition head
+def test_recognition_with_silence():
+    canonical_inv = {
+        "p": np.array([0.0, 0.7, 0.3]),
+        "b": np.array([0.0, 0.2, 0.8]),
+    }
+    rec = RecognitionHead(canonical_inv)
+    # Channel 0 is silence+
+    # High silence activation -> predicts '_'
+    m_sil = np.array([10.0, 5.0, 5.0])
+    pred, _ = rec.predict_frame(m_sil, silence_channel_idx=0, silence_threshold=0.5)
+    assert pred == "_"
+
+    # Speech frame -> predicts phone
+    m_speech = np.array([-10.0, 10.0, -10.0])
+    pred, _ = rec.predict_frame(m_speech, silence_channel_idx=0, silence_threshold=0.5)
+    assert pred == "p"

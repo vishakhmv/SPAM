@@ -85,9 +85,8 @@ def log_environment_info(pv: PhonologicalVectors, num_train: int, num_test: int)
 
 
 def run_full_reproduction(
-    num_train: int = 256,
+    num_train: Optional[int] = 256,
     use_core_test: bool = True,
-    prominence_sweep: Optional[List[float]] = None,
 ):
     np.random.seed(default_config.random_seed)
     torch.manual_seed(default_config.random_seed)
@@ -286,23 +285,27 @@ def run_full_reproduction(
     for utt, wav, rep, spam in test_data:
         b, _ = seg_head.compute_ensemble_signal(wav, rep, spam)
         peaks, pred_times = seg_head.detect_boundaries(b)
-        pred_phones = rec_head.predict_utterance(spam, peaks.tolist())
+        pred_phones = rec_head.predict_utterance(
+            spam,
+            peaks.tolist(),
+            silence_channel_idx=silence_idx,
+            silence_threshold=default_config.silence_threshold,
+        )
 
         all_ref_boundaries.append(utt.eval_boundaries)
         all_pred_boundaries.append(pred_times)
         all_ref_phones.append(utt.eval_ipa_sequence)
         all_pred_phones.append(pred_phones)
 
-    best_seg_res = evaluator.evaluate_segmentation(all_ref_boundaries, all_pred_boundaries)
-    best_rec_res = evaluator.evaluate_recognition(all_ref_phones, all_pred_phones)
-    best_prom = fixed_prom
+    seg_res = evaluator.evaluate_segmentation(all_ref_boundaries, all_pred_boundaries)
+    rec_res = evaluator.evaluate_recognition(all_ref_phones, all_pred_phones)
 
     print("\n" + "=" * 75)
-    print(f"REPRODUCTION RESULTS ON TIMIT (Prominence = {best_prom})")
+    print(f"REPRODUCTION RESULTS ON TIMIT (Prominence = {fixed_prom})")
     print("=" * 75)
-    print(best_seg_res)
+    print(seg_res)
     print("-" * 75)
-    print(best_rec_res)
+    print(rec_res)
     print("=" * 75)
 
     # Final Comparison Table (Section 21)
@@ -313,7 +316,7 @@ def run_full_reproduction(
     print(header)
     print("-" * len(header))
     paper_row = f"{'TIMIT':<8} | {'TIMIT (3h)':<20} | {'WavLM-large':<14} | {'24':<6} | {'80.0%':<20} | {'22.9%':<16}"
-    repro_row = f"{'TIMIT':<8} | {f'TIMIT ({len(train_utts)} utts)':<20} | {'WavLM-large':<14} | {'24':<6} | {f'{best_seg_res.r_value * 100:.2f}%':<20} | {f'{best_rec_res.pfer * 100:.2f}%':<16}"
+    repro_row = f"{'TIMIT':<8} | {f'TIMIT ({len(train_utts)} utts)':<20} | {'WavLM-large':<14} | {'24':<6} | {f'{seg_res.r_value * 100:.2f}%':<20} | {f'{rec_res.pfer * 100:.2f}%':<16}"
     print(f"[Paper]      {paper_row}")
     print(f"[Reproduced] {repro_row}")
     print("=" * 85)
@@ -324,15 +327,63 @@ def run_full_reproduction(
         f.write("SPAM TIMIT REPRODUCTION SUMMARY\n")
         f.write(f"Train utterances: {len(train_utts)}\n")
         f.write(f"Test utterances: {len(test_utts)}\n")
-        f.write(f"Best Prominence: {best_prom}\n")
-        f.write(f"Segmentation R-value: {best_seg_res.r_value * 100:.2f}%\n")
-        f.write(f"Precision: {best_seg_res.precision * 100:.2f}%\n")
-        f.write(f"Recall: {best_seg_res.recall * 100:.2f}%\n")
-        f.write(f"F1: {best_seg_res.f1 * 100:.2f}%\n")
-        f.write(f"Recognition PFER: {best_rec_res.pfer * 100:.2f}%\n")
-        f.write(f"Recognition PER: {best_rec_res.per * 100:.2f}%\n")
+        f.write(f"Prominence: {fixed_prom}\n")
+        f.write(f"Segmentation R-value: {seg_res.r_value * 100:.2f}%\n")
+        f.write(f"Precision: {seg_res.precision * 100:.2f}%\n")
+        f.write(f"Recall: {seg_res.recall * 100:.2f}%\n")
+        f.write(f"F1: {seg_res.f1 * 100:.2f}%\n")
+        f.write(f"Recognition PFER: {rec_res.pfer * 100:.2f}%\n")
+        f.write(f"Recognition PER: {rec_res.per * 100:.2f}%\n")
     print(f"\nSummary saved to: {summary_path}")
 
 
 if __name__ == "__main__":
-    run_full_reproduction()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="SPAM Reproduction on TIMIT (arXiv:2607.09020v1)")
+    parser.add_argument(
+        "--full",
+        action="store_true",
+        help="Train on the FULL TIMIT training split (4,620 utterances, ~3 hours) as per Table I.",
+    )
+    parser.add_argument(
+        "--num_train",
+        type=int,
+        default=None,
+        help="Number of training utterances to use (default: 256 unless --full is specified).",
+    )
+    parser.add_argument(
+        "--all_test",
+        action="store_true",
+        help="Evaluate on the complete test set (1,680 utts) instead of the standard Core Test Set (192 utts).",
+    )
+    parser.add_argument(
+        "--timit_root",
+        type=str,
+        default=None,
+        help="Optional override for TIMIT dataset directory.",
+    )
+    parser.add_argument(
+        "--output_root",
+        type=str,
+        default=None,
+        help="Optional override for output directory.",
+    )
+    args = parser.parse_args()
+
+    # Apply path overrides if supplied
+    if args.timit_root:
+        default_config.timit_root = Path(args.timit_root)
+    if args.output_root:
+        default_config.output_root = Path(args.output_root)
+        default_config.output_root.mkdir(parents=True, exist_ok=True)
+
+    # Determine training subset
+    if args.full:
+        train_count = None
+    elif args.num_train is not None:
+        train_count = args.num_train
+    else:
+        train_count = 256
+
+    run_full_reproduction(num_train=train_count, use_core_test=not args.all_test)

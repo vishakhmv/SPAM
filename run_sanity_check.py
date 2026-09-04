@@ -166,7 +166,12 @@ def run_sanity_check(num_train: int = 10, num_test: int = 2):
     print(f"Canonical inventory entries: {len(canonical_inv)}")
     rec_head = RecognitionHead(canonical_inv)
 
-    pred_phones = rec_head.predict_utterance(spam_test, peaks.tolist())
+    pred_phones = rec_head.predict_utterance(
+        spam_test,
+        peaks.tolist(),
+        silence_channel_idx=silence_idx,
+        silence_threshold=default_config.silence_threshold,
+    )
     print(f"Delimited segments: {len(pred_phones)}")
     print(f"Sample predicted phones: {pred_phones[:10]}")
 

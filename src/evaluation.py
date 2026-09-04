@@ -12,7 +12,7 @@ from typing import List, Dict, Tuple, Optional, Sequence
 import numpy as np
 import panphon.distance
 from phone_metrics.segmentation import PrecisionRecallMetric
-from phone_metrics.recognition import phone_error_rates, _levenshtein
+from phone_metrics.recognition import phone_error_rates, _levenshtein, _expand_phones
 from phone_metrics.timit import SILENCE
 
 
@@ -124,9 +124,13 @@ class Evaluator:
         total_phones = 0
 
         for ref, pred in zip(ref_phones_list, pred_phones_list):
+            # Expand compound phones (diphthongs -> component vowels) per phone_metrics benchmark convention
+            ref_expanded = _expand_phones(ref)
+            pred_expanded = _expand_phones(pred)
+
             # Ignore silence in PFER and PER
-            ref_ns = [tok for tok in ref if tok != SILENCE and tok is not None]
-            pred_ns = [tok for tok in pred if tok != SILENCE and tok is not None]
+            ref_ns = [tok for tok in ref_expanded if tok != SILENCE and tok is not None]
+            pred_ns = [tok for tok in pred_expanded if tok != SILENCE and tok is not None]
             if not ref_ns:
                 continue
 

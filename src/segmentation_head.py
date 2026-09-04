@@ -84,7 +84,7 @@ class SegmentationHead:
         self,
         backward_regressor: Optional[BackwardRegressor] = None,
         silence_channel_idx: Optional[int] = None,
-        prominence: float = 0.05,
+        prominence: float = 1e-6,
         min_distance: int = 2,
         silence_threshold: float = 0.5,
         sample_rate: int = 16000,

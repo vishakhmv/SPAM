@@ -143,8 +143,14 @@ class PanphonMapping:
                     elif ch == "release-":
                         # Stops/affricates release burst vs non-stops
                         # For canonical phone, non-stop phones have release-
-                        is_stop = seg.get("cont") == -1 and seg.get("delrel") == -1
+                        is_stop = seg.get("cont") == -1 and seg.get("nas") == -1
                         if not is_stop:
+                            vec[i] = 1.0
+                            active_count += 1
+                    elif ch == "release+":
+                        # Stops/affricates get release+ in canonical vector
+                        is_stop = seg.get("cont") == -1 and seg.get("nas") == -1
+                        if is_stop:
                             vec[i] = 1.0
                             active_count += 1
                 else:

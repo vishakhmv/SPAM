@@ -1,4 +1,14 @@
-"""SPAM: Phone Segmentation and Recognition through Phonological Activation Mapping."""
+import sys
+from pathlib import Path
+
+# Add phone-metrics to path if not installed as pip package
+try:
+    import phone_metrics
+except ImportError:
+    for p in [Path("/content/drive/MyDrive/SPAM/phone-metrics"), Path(__file__).resolve().parent.parent / "phone-metrics"]:
+        if p.exists() and str(p) not in sys.path:
+            sys.path.insert(0, str(p))
+            break
 
 # Ensure panphon UTF-8 encoding compatibility on Windows
 try:

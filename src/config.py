@@ -1,15 +1,29 @@
 """Configuration module for SPAM reproduction."""
 
-from dataclasses import dataclass
+import os
+from dataclasses import dataclass, field
 from pathlib import Path
+
+
+# Auto-detect if running inside Google Colab with Drive mounted
+IS_COLAB = Path("/content/drive/MyDrive/SPAM").exists()
 
 
 @dataclass
 class Config:
-    # Dataset paths
-    timit_root: Path = Path(r"c:\SPAM\TIMIT_LDC93S1\TIMIT_LDC93S1\TIMIT")
-    output_root: Path = Path(r"c:\SPAM\output")
-    cache_dir: Path = Path(r"c:\SPAM\output\cache")
+    # Dataset paths: uses your exact Drive location on Colab, local path on Windows
+    timit_root: Path = (
+        Path("/content/drive/MyDrive/SPAM/TIMIT_LDC93S1/TIMIT_LDC93S1/TIMIT")
+        if IS_COLAB else Path(r"c:\SPAM\TIMIT_LDC93S1\TIMIT_LDC93S1\TIMIT")
+    )
+    output_root: Path = (
+        Path("/content/drive/MyDrive/SPAM/output")
+        if IS_COLAB else Path(r"c:\SPAM\output")
+    )
+    cache_dir: Path = (
+        Path("/content/cache")
+        if Path("/content").exists() else Path(r"c:\SPAM\output\cache")
+    )
 
     # Audio & Model settings
     sample_rate: int = 16000
@@ -30,7 +44,7 @@ class Config:
     # Segmentation peak detection & suppression settings (Section III-D)
     prominence_threshold: float = 1e-6  # [UNSPECIFIED IN PAPER: best value for 7-signal product ensemble]
     min_peak_distance_frames: int = 2  # Min distance between boundary peaks (40 ms)
-    silence_threshold: float = 0.7  # [UNSPECIFIED IN PAPER: best threshold on sigmoid(m_{t, silence+})]
+    silence_threshold: float = 0.5  # [UNSPECIFIED IN PAPER: best threshold on sigmoid(m_{t, silence+}) corresponding to midpoint alpha_i]
 
     # Evaluation settings (Section IV-A, IV-B)
     tolerance_seconds: float = 0.02  # 20 ms boundary tolerance
