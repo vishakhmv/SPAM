@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phone-metrics"
+version = "0.1.0"
+description = "Evaluation metrics for phone segmentation and recognition, decoupled from the models that produce them."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Stephen McIntosh" }]
+keywords = ["speech", "phone", "phoneme", "segmentation", "evaluation", "r-value", "per"]
+dependencies = [
+    "numpy",
+    "panphon>=0.22.2",
+    "praatio>=6.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["phone_metrics*"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.black]
+line-length = 100

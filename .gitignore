@@ -16,9 +16,6 @@ ENV/
 .coverage
 htmlcov/
 
-# External repos / dependencies
-phone-metrics/
-phone_metrics.egg-info/
 
 # Datasets
 TIMIT_LDC93S1/
