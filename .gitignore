@@ -33,3 +33,6 @@ output/cache/
 # OS files
 .DS_Store
 Thumbs.db
+
+important.md
+important2.md
