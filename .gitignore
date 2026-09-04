@@ -1,0 +1,35 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Testing & Cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# External repos / dependencies
+phone-metrics/
+phone_metrics.egg-info/
+
+# Datasets
+TIMIT_LDC93S1/
+Dataset/
+data/
+
+# Representation Cache
+output/cache/
+*.npy.tmp
+*.pkl.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
