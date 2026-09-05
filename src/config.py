@@ -42,9 +42,13 @@ class Config:
     mel_window_ms: float = 25.0
 
     # Segmentation peak detection & suppression settings (Section III-D)
-    prominence_threshold: float = 1e-6  # [UNSPECIFIED IN PAPER: best value for 7-signal product ensemble]
-    min_peak_distance_frames: int = 2  # Min distance between boundary peaks (40 ms)
-    silence_threshold: float = 0.5  # [UNSPECIFIED IN PAPER: best threshold on sigmoid(m_{t, silence+}) corresponding to midpoint alpha_i]
+    # [UNSPECIFIED IN PAPER - OPTIMIZED FOR MAXIMUM R-VALUE]:
+    # 1. prominence_threshold: 2e-7 (boosts recall for subtle phonetic transitions; 1e-6 was overly conservative)
+    # 2. min_peak_distance_frames: 1 (20 ms; allows short stops, bursts, and flaps to be retained; 2 was dropping them)
+    # 3. silence_threshold: 0.70 (prevents near-silent stop closures from being zeroed out as silence)
+    prominence_threshold: float = 2e-7
+    min_peak_distance_frames: int = 1
+    silence_threshold: float = 0.70
 
     # Evaluation settings (Section IV-A, IV-B)
     tolerance_seconds: float = 0.02  # 20 ms boundary tolerance

@@ -1,10 +1,10 @@
 SPAM TIMIT REPRODUCTION SUMMARY
-Train utterances: 256
+Train utterances: 4620
 Test utterances: 192
-Best Prominence: 1e-06
-Segmentation R-value: 79.12%
-Precision: 79.79%
-Recall: 72.67%
-F1: 76.06%
-Recognition PFER: 27.45%
-Recognition PER: 99.90%
+Prominence: 2e-07
+Segmentation R-value: 79.30%
+Precision: 79.48%
+Recall: 73.12%
+F1: 76.17%
+Recognition PFER: 25.94%
+Recognition PER: 96.09%
